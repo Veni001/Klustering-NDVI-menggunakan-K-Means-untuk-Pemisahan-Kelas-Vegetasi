@@ -1,0 +1,153 @@
+---
+title: "Untitled"
+author: "Ima, Fathir, Jelli, Agus, Veni"
+date: "2024-04-23"
+output: html_document
+---
+
+```{r}
+library(terra)
+library(raster)
+library(shiny)
+```
+
+```{r}
+b4<-rast("C:/Users/mafad/Downloads/ADSp_TB/Ogan Komering Ilir_Terkoreksi/RT_LC09_L1TP_124062_20230928_20230928_02_T1_B4.TIF")
+b5<-rast("C:/Users/mafad/Downloads/ADSp_TB/Ogan Komering Ilir_Terkoreksi/RT_LC09_L1TP_124062_20230928_20230928_02_T1_B5.TIF")
+pedamaran_timur <- vect("C:/Users/mafad/Downloads/shapefile_PedamaranTimur.shp")
+```
+```{r}
+pedamaran_timur <- project(pedamaran_timur,crs(b5))
+```
+```{r}
+ext(pedamaran_timur)
+```
+```{r}
+b5 <- crop(b5,ext(pedamaran_timur))
+b5 <- mask(b5,pedamaran_timur)
+b5
+```
+```{r}
+pedamaran_timur <- project(pedamaran_timur,crs(b4))
+```
+
+```{r}
+b4 <- crop(b4,ext(pedamaran_timur))
+b4 <- mask(b4,pedamaran_timur)
+b4
+```
+
+
+
+
+
+
+```{r}
+par(mfrow = c(2,2))
+plot(b4, main = "Blue", col = gray(0:100 / 100), zlim = c(0, 1))
+plot(b5, main = "Green", col = gray(0:100 / 100), zlim = c(0, 1))
+#ext()
+b4
+b5
+#ext <- c(405000,410000,-350000,-345000)
+
+#b7_new <- crop(b7,ext)
+#plot(b7_new, main = "Red New", col = gray(0:100 / 100), zlim = c(0, 1))
+#b7_new
+
+#b5_new <- crop(b5,ext)
+#plot(b5_new, main = "Green New", col = gray(0:100 / 100), zlim = c(0, 1))
+#b5_new
+
+#b4_new <- crop(b4,ext)
+#plot(b4_new, main = "Blue New", col = gray(0:100 / 100), zlim = c(0, 1))
+#b4_new
+```
+
+
+
+
+```{r}
+set.seed(111)
+library(cluster)
+ndvi <- function(red,nir){
+  ndviArray <- (nir-red)/(nir+red)
+  return(ndviArray)
+}
+red<-b4
+nir<-b5
+plot(ndvi(red,nir),main="NDVI")
+NDVI<-ndvi(red,nir)
+
+df_NDVI <- as.data.frame(NDVI,cell=T)
+colnames(df_NDVI)[2]<-"Normalized Derivation Vegetation Index"
+str(df_NDVI)
+
+NDVI_raster <- rast(NDVI,nlyr=1)
+NDVI_raster
+```
+
+```{r}
+library(cluster)
+library(factoextra)
+godoffit <- c()
+k<-1:9
+for (i in 1:9) {
+  NDVI_kmeans <- kmeans(df_NDVI[,-1], centers=i)
+  gof <- NDVI_kmeans$betweenss/NDVI_kmeans$totss
+  godoffit<-append(godoffit,gof)
+}
+godoffit
+```
+
+```{r}
+par(bg="pink")
+plot(x=seq(1:9),y=godoffit,type="l",xlab="Kluster",ylab="BetweenSS/TotalSS",main="Elbow K Terbaik Berdasarkan Rasio BetweenSS&TotalSS",col="red",lwd=1)
+points(x=seq(1:9),y=godoffit,col="blue",pch=11,lwd=2)
+```
+
+
+
+
+```{r}
+NDVI_kmeans <- kmeans(df_NDVI[,-1], centers=2)
+kmeans_NDVI_raster[df_NDVI$cell]<-NDVI_kmeans$cluster
+```
+
+```{r}
+plot(kmeans_NDVI_raster, 
+     main="Klustering NDVI Pedamaran Timur Pasca Kebakaran dengan 2 Kluster", 
+     col=c("blue", "red"), 
+     colNA="black")
+legend("bottomright", legend=c("MV", "DV"), fill=c("blue", "red"), title="Kluster", cex=0.7, inset=c(0.1, 0.1))
+```
+
+
+```{r}
+kmeans_NDVI_raster
+```
+
+```{r}
+NDVI_kmeans$centers
+```
+
+```{r}
+luas_kluster <- c(NDVI_kmeans$size)
+luas_kluster
+```
+
+```{r}
+luas <- expanse(pedamaran_timur,unit="km")
+luas
+```
+```{r}
+luas_piksel <- luas/nrow(df_NDVI)
+luas_piksel
+```
+
+```{r}
+for (i in 1:length(luas_kluster)) {
+  cat("Luas Kluster =", i, "Adalah", luas_kluster[i] * luas_piksel,"KM^2", "\n")
+}
+
+```
