@@ -1,2 +1,2 @@
-# Klustering-NDVI-menggunakan-K-Means-untuk-Pemisahan-Kelas-Vegetasi
+# Klustering NDVI Menggunakan K-Means Untuk Pemisahan Kelas Vegetasi
 Proyek ini menganalisis perubahan tutupan vegetasi di Kecamatan Pedamaran Timur, Kabupaten OKI, sebelum dan setelah kebakaran hutan dan lahan pada September 2019. Menggunakan citra Landsat 8, indeks vegetasi dihitung melalui metode NDVI, kemudian dikelompokkan menggunakan algoritma K-means untuk memetakan kondisi vegetasi. Hasil analisis menunjukkan penurunan signifikan pada area vegetasi sehat sebesar 65,0944 km² dan peningkatan area vegetasi sedang hingga non-vegetasi. Temuan ini menggambarkan dampak besar kebakaran terhadap kondisi lingkungan dan menunjukkan potensi machine learning dalam analisis perubahan vegetasi.
